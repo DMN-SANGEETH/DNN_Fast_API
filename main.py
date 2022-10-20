@@ -8,7 +8,7 @@ from io import BytesIO
 from PIL import Image
 import tensorflow as tf
 import cv2
-#from starlette.responses import FileResponse
+from starlette.responses import FileResponse
 
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -19,7 +19,7 @@ app = FastAPI()
 
 #conect to css file
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+#app.mount("/static", StaticFiles(directory="static"), name="static")
 
 #get to templare
 templates = Jinja2Templates(directory="templates")
@@ -43,8 +43,9 @@ CLASS_NAMES = [ "Normal", "Paition"]
 
 @app.get("/ping")
 async def ping():
-    #return FileResponse('./templates/index.html')
-    return templates.TemplateResponse('index.html')
+    return FileResponse('./templates/index.html')
+    #return templates.TemplateResponse('index.html')
+    
 
 def read_file_as_image(data) -> np.ndarray:
     image = np.array(Image.open(BytesIO(data)))
