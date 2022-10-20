@@ -1,6 +1,6 @@
 
 
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile, Request
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import numpy as np
@@ -8,8 +8,22 @@ from io import BytesIO
 from PIL import Image
 import tensorflow as tf
 import cv2
+#from starlette.responses import FileResponse
+
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+
 
 app = FastAPI()
+
+#conect to css file
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+#get to templare
+templates = Jinja2Templates(directory="templates")
+
 
 origins = [
     "http://localhost",
@@ -29,14 +43,15 @@ CLASS_NAMES = [ "Normal", "Paition"]
 
 @app.get("/ping")
 async def ping():
-    return "Hello, I am alive"
+    #return FileResponse('./templates/index.html')
+    return templates.TemplateResponse('index.html')
 
 def read_file_as_image(data) -> np.ndarray:
     image = np.array(Image.open(BytesIO(data)))
     return image
 
-@app.post("/predict")
-async def predict(
+@app.post("/predict", response_class=HTMLResponse)
+async def predict(request: Request,
     file: UploadFile = File(...)
 ):
     image = read_file_as_image(await file.read())
@@ -58,10 +73,20 @@ async def predict(
 
     predicted_class = CLASS_NAMES[np.argmax(predictions[0])]
     confidence = np.max(predictions[0])
+    return templates.TemplateResponse("predict.html", {"request": request, "predicted_class": predicted_class, "confidence":confidence})
+
+    '''
+    {"request": request, "disease": predicted_class, "predict_value":confidence}
+
+    web=FileResponse('./templates/predict.html')
+    return (web , {
+    'class': predicted_class,
+    'confidence': float(confidence)
+    })
     return {
-        'class': predicted_class,
-        'confidence': float(confidence)
-    }
+    'class': predicted_class,
+    'confidence': float(confidence)
+    }'''
 
 if __name__ == "__main__":
     uvicorn.run(app, host='localhost', port=8000)
