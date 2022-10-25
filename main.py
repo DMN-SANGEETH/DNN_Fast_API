@@ -1,5 +1,3 @@
-
-
 from fastapi import FastAPI, File, UploadFile, Request
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
@@ -17,35 +15,18 @@ from fastapi.templating import Jinja2Templates
 
 app = FastAPI()
 
-#conect to css file
-
-#app.mount("/static", StaticFiles(directory="static"), name="static")
-
 #get to templare
 templates = Jinja2Templates(directory="templates")
 
-
-origins = [
-    "http://localhost",
-    "http://localhost:3000",
-]
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
+#set model
 MODEL = tf.keras.models.load_model("Model.h5")
 
+#predicted class
 CLASS_NAMES = [ "Normal", "Paition"]
 
 @app.get("/ping")
 async def ping():
     return FileResponse('./templates/index.html')
-    #return templates.TemplateResponse('index.html')
-    
 
 def read_file_as_image(data) -> np.ndarray:
     image = np.array(Image.open(BytesIO(data)))
@@ -55,10 +36,8 @@ def read_file_as_image(data) -> np.ndarray:
 async def predict(request: Request,
     file: UploadFile = File(...)
 ):
+    #image preprossesing 
     image = read_file_as_image(await file.read())
-    #img_batch = np.expand_dims(image, 0)
-
-    #img=cv2.imread(image)
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     blur = cv2.GaussianBlur(gray, (0,0), sigmaX=33, sigmaY=33)
     divide = cv2.divide(gray, blur, scale=255)
@@ -76,18 +55,6 @@ async def predict(request: Request,
     confidence = np.max(predictions[0])
     return templates.TemplateResponse("predict.html", {"request": request, "predicted_class": predicted_class, "confidence":confidence})
 
-    '''
-    {"request": request, "disease": predicted_class, "predict_value":confidence}
-
-    web=FileResponse('./templates/predict.html')
-    return (web , {
-    'class': predicted_class,
-    'confidence': float(confidence)
-    })
-    return {
-    'class': predicted_class,
-    'confidence': float(confidence)
-    }'''
-
+    
 if __name__ == "__main__":
     uvicorn.run(app, host='localhost', port=8000)
