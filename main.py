@@ -55,6 +55,11 @@ async def predict(request: Request,
     confidence = np.max(predictions[0])
     return templates.TemplateResponse("predict.html", {"request": request, "predicted_class": predicted_class, "confidence":confidence})
 
+@app.post("/predict_2", response_class=HTMLResponse)
+async def predict(request: Request
+):
+
+    return 
     
 if __name__ == "__main__":
     uvicorn.run(app, host='localhost', port=8000)
