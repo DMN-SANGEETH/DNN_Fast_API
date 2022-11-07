@@ -4,6 +4,5 @@ uvicorn
 python-multipart
 pillow
 tensorflow-serving-api==2.5.0
-matplotlib
 numpy
 gunicorn==20.1.0
